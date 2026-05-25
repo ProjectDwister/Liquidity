@@ -407,7 +407,7 @@ body{
     Live · NSE &amp; BSE
   </div>
   <h1>Liquidity<br>Dashboard</h1>
-  <div class="header-meta">Last updated: <strong id="lastUpdated">—</strong></div>
+
 </div>
 
 <!-- Body -->
@@ -502,7 +502,7 @@ async function fetchSheet(name){
   const m=txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
   if(!m) throw new Error(`Bad response for "${name}"`);
   const d=JSON.parse(m[1]);
-  if(d.status==='error') throw new Error(`Sheet "${name}" not found. Check it exists and the sheet is publicly shared.`);
+  if(d.status==='error') throw new Error(`Sheet "${name}" not found or inaccessible.`);
   return d.table;
 }
 
@@ -515,8 +515,10 @@ function parseDate(v){
   return isNaN(d)?null:d;
 }
 
-function startDate(){
-  const n=new Date();
+/* FIX 1: Accept an explicit anchor end-date (last date in ref sheet)
+   so the period window is identical to the Google Sheet's calculation. */
+function calcStartDate(anchorDate){
+  const n=anchorDate;
   switch(period){
     case '1M': return new Date(n.getFullYear(),n.getMonth()-1,n.getDate());
     case '3M': return new Date(n.getFullYear(),n.getMonth()-3,n.getDate());
@@ -527,15 +529,24 @@ function startDate(){
   }
 }
 
+/* FIX 2: Robust column detection — scan ALL columns independently
+   (no else-if chaining), then fall back to position 0,1,2. */
 function detectCols(table){
   let dc=-1,qc=-1,vc=-1;
+  const valCrFlag={is:false}; // track if value column is already in Crore
   (table.cols||[]).forEach((c,i)=>{
-    const l=(c.label||'').toLowerCase(),t=(c.type||'').toLowerCase();
-    if(dc<0&&(t==='date'||t==='datetime'||l.includes('date'))) dc=i;
-    else if(qc<0&&(l.includes('qty')||l.includes('quantity')||l.includes('volume'))) qc=i;
-    else if(vc<0&&(l.includes('val')||l.includes('amount')||l.includes('cr')||l.includes('turnover'))) vc=i;
+    const l=(c.label||'').toLowerCase();
+    const t=(c.type||'').toLowerCase();
+    if(dc<0 && (t==='date'||t==='datetime'||l.includes('date'))) { dc=i; return; }
+    if(qc<0 && (l.includes('qty')||l.includes('quantity')||l.includes('volume')||l.includes('shares')||l.includes('traded q'))) { qc=i; return; }
+    if(vc<0 && (l.includes('turnover')||l.includes('value')||l.includes('val')||l.includes('amount')||l.includes('trade val'))) {
+      vc=i;
+      /* FIX 3: if label explicitly says crore/cr, mark it so we skip conversion */
+      if(l.includes('crore')||l.match(/\bcr\b/)) valCrFlag.is=true;
+      return;
+    }
   });
-  return{dc:dc<0?0:dc, qc:qc<0?1:qc, vc:vc<0?2:vc};
+  return{dc:dc<0?0:dc, qc:qc<0?1:qc, vc:vc<0?2:vc, valAlreadyCr:valCrFlag.is};
 }
 
 function filterRows(table,sd,ed,cols){
@@ -543,6 +554,15 @@ function filterRows(table,sd,ed,cols){
     const d=parseDate(r.c?.[cols.dc]?.v);
     return d&&d>=sd&&d<=ed;
   });
+}
+
+/* FIX 3: Convert raw value to INR Crore reliably.
+   If label says Crore → no conversion needed.
+   Otherwise check sample magnitude: if avg > 10,000 it's raw INR → divide by 1e7.
+   (No Indian InvIT/REIT has >10,000 Cr daily turnover, so threshold is safe.) */
+function toInrCr(avgVal, cols){
+  if(cols.valAlreadyCr) return avgVal;
+  return avgVal >= 10000 ? avgVal / 1e7 : avgVal;
 }
 
 function fmt(n,dec=0){
@@ -556,6 +576,16 @@ function periodLabel(){
 
 function fmtDate(d){
   return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+}
+
+/* Extract the last date present in any table */
+function lastDateInTable(table, cols){
+  const rows=table.rows||[];
+  for(let i=rows.length-1;i>=0;i--){
+    const d=parseDate(rows[i].c?.[cols.dc]?.v);
+    if(d) return d;
+  }
+  return new Date();
 }
 
 async function runFetch(){
@@ -573,12 +603,18 @@ async function runFetch(){
       <div class="state-sub">Reading <strong>${sec}_${exch}</strong> from Google Sheets</div>
     </div>`;
 
-  const sd=startDate(), ed=new Date();
   const sheet=`${sec}_${exch}`;
 
   try{
+    /* Always fetch reference sheet first to get the correct anchor end date */
     const [sT,rT]=await Promise.all([fetchSheet(sheet),fetchSheet(REF)]);
     const sC=detectCols(sT), rC=detectCols(rT);
+
+    /* FIX 1: Use the last date in IRBINVIT_NSE as the anchor (matches the sheet exactly) */
+    const anchorEnd=lastDateInTable(rT,rC);
+    const sd=calcStartDate(anchorEnd);
+    const ed=anchorEnd;
+
     const sRows=filterRows(sT,sd,ed,sC);
     const rRows=filterRows(rT,sd,ed,rC);
     const refDays=rRows.length;
@@ -594,14 +630,7 @@ async function runFetch(){
     const denom=refDays||sRows.length||1;
     const avgQ=totalQ/denom;
     const avgV=totalV/denom;
-    const valCr=avgV>100?avgV/1e7:avgV;
-
-    /* Update last updated from ref sheet */
-    if(rRows.length){
-      const last=rRows[rRows.length-1];
-      const lf=last?.c?.[rC.dc]?.f||'';
-      if(lf) document.getElementById('lastUpdated').textContent=lf;
-    }
+    const valCr=toInrCr(avgV,sC);
 
     document.getElementById('results').innerHTML=`
       <div class="metrics-grid">
