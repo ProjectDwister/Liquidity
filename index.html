@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Liquidity Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+:root{
+  --ink:#0C1A35;
+  --ink2:#3D5278;
+  --ink3:#7A90B0;
+  --ink4:#B8C7DC;
+  --paper:#F4F1EB;
+  --paper2:#EAE6DE;
+  --paper3:#DFD9CF;
+  --card:#FFFFFF;
+  --gold:#C8820A;
+  --gold-lt:#FDF0D8;
+  --gold-md:#F5C842;
+  --teal:#0B6E5E;
+  --teal-lt:#E0F4EF;
+  --teal-md:#1DA88C;
+  --danger:#C13030;
+  --r:14px;
+  --r-lg:20px;
+  --r-xl:28px;
+}
+
+html{background:var(--paper)}
+
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Plus Jakarta Sans',sans-serif;
+  min-height:100vh;
+  padding-bottom:calc(88px + env(safe-area-inset-bottom));
+  max-width:520px;
+  margin:0 auto;
+  position:relative;
+}
+
+/* ─── Header ─── */
+.header{
+  padding:52px 20px 24px;
+  background:var(--ink);
+  position:relative;
+  overflow:hidden;
+}
+
+.header::after{
+  content:'';
+  position:absolute;
+  right:-40px;top:-60px;
+  width:220px;height:220px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.03);
+  pointer-events:none;
+}
+
+.header::before{
+  content:'';
+  position:absolute;
+  right:40px;bottom:-80px;
+  width:160px;height:160px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.04);
+  pointer-events:none;
+}
+
+.header-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:50px;
+  padding:5px 12px;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:0.08em;
+  color:rgba(255,255,255,0.5);
+  text-transform:uppercase;
+  margin-bottom:16px;
+}
+
+.header-tag .dot{
+  width:6px;height:6px;
+  border-radius:50%;
+  background:var(--gold-md);
+  animation:blink 2s ease-in-out infinite;
+}
+
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+.header h1{
+  font-family:'Playfair Display',serif;
+  font-size:32px;
+  font-weight:700;
+  color:#fff;
+  line-height:1.15;
+  letter-spacing:-0.01em;
+  position:relative;z-index:1;
+}
+
+.header-meta{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-top:14px;
+  font-size:12px;
+  color:rgba(255,255,255,0.35);
+  font-weight:500;
+}
+
+.header-meta strong{color:rgba(255,255,255,0.6)}
+
+/* ─── Body content ─── */
+.body{padding:20px 16px 12px}
+
+/* ─── Section label ─── */
+.sec-label{
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--ink3);
+  margin-bottom:8px;
+}
+
+/* ─── Security select ─── */
+.select-wrap{
+  position:relative;
+  margin-bottom:18px;
+}
+
+.select-wrap select{
+  width:100%;
+  appearance:none;
+  -webkit-appearance:none;
+  background:var(--card);
+  border:1.5px solid var(--paper3);
+  border-radius:var(--r);
+  color:var(--ink);
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:16px;
+  font-weight:600;
+  padding:16px 48px 16px 18px;
+  cursor:pointer;
+  transition:border-color 0.2s,box-shadow 0.2s;
+  -webkit-appearance:none;
+}
+
+.select-wrap select:focus{
+  outline:none;
+  border-color:var(--ink);
+  box-shadow:0 0 0 3px rgba(12,26,53,0.08);
+}
+
+.select-wrap::after{
+  content:'';
+  position:absolute;
+  right:18px;top:50%;
+  transform:translateY(-50%);
+  width:18px;height:18px;
+  pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%233D5278' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m5 7 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-size:contain;
+}
+
+/* ─── Pills ─── */
+.pills{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:18px;
+}
+
+.pill{
+  padding:9px 16px;
+  border-radius:50px;
+  border:1.5px solid var(--paper3);
+  background:var(--card);
+  color:var(--ink2);
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.18s;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+.pill:active{transform:scale(0.95)}
+
+.pill.active-exch{
+  background:var(--ink);
+  border-color:var(--ink);
+  color:#fff;
+}
+
+.pill.active-period{
+  background:var(--gold-lt);
+  border-color:var(--gold);
+  color:var(--gold);
+}
+
+/* ─── Divider ─── */
+.divider{height:1px;background:var(--paper2);margin:4px 0 20px}
+
+/* ─── Error ─── */
+.error-box{
+  background:#FFF0F0;
+  border:1.5px solid #F5CCCC;
+  border-radius:var(--r);
+  padding:14px 16px;
+  color:var(--danger);
+  font-size:13px;
+  line-height:1.6;
+  display:none;
+  margin-bottom:16px;
+}
+
+/* ─── State card ─── */
+.state-card{
+  background:var(--card);
+  border-radius:var(--r-xl);
+  padding:48px 24px;
+  text-align:center;
+  border:1.5px solid var(--paper2);
+  margin-bottom:16px;
+}
+
+.state-emoji{font-size:40px;margin-bottom:16px;display:block}
+
+.state-title{
+  font-family:'Playfair Display',serif;
+  font-size:20px;
+  font-weight:700;
+  color:var(--ink);
+  margin-bottom:8px;
+}
+
+.state-sub{
+  font-size:14px;
+  color:var(--ink3);
+  line-height:1.7;
+  max-width:280px;
+  margin:0 auto;
+}
+
+/* ─── Spinner ─── */
+.spinner{
+  width:36px;height:36px;
+  border:2.5px solid var(--paper2);
+  border-top-color:var(--ink);
+  border-radius:50%;
+  animation:spin 0.65s linear infinite;
+  margin:0 auto 16px;
+}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ─── Metric cards ─── */
+.metrics-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.m-card{
+  background:var(--card);
+  border-radius:var(--r-lg);
+  padding:20px 18px;
+  border:1.5px solid var(--paper2);
+  position:relative;
+  overflow:hidden;
+  animation:fadeUp 0.4s ease both;
+}
+
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.m-card.c-teal{
+  background:var(--teal);
+  border-color:var(--teal);
+}
+
+.m-card.c-gold{
+  background:var(--ink);
+  border-color:var(--ink);
+}
+
+.m-card .m-label{
+  font-size:10.5px;
+  font-weight:600;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  margin-bottom:12px;
+  line-height:1.4;
+}
+
+.m-card.c-teal .m-label{color:rgba(255,255,255,0.55)}
+.m-card.c-gold .m-label{color:rgba(255,255,255,0.45)}
+
+.m-card .m-value{
+  font-family:'JetBrains Mono',monospace;
+  font-size:26px;
+  font-weight:600;
+  letter-spacing:-0.03em;
+  line-height:1;
+}
+
+.m-card.c-teal .m-value{color:#fff}
+.m-card.c-gold .m-value{color:var(--gold-md)}
+
+.m-card .m-unit{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:12px;
+  font-weight:500;
+  margin-top:6px;
+}
+
+.m-card.c-teal .m-unit{color:rgba(255,255,255,0.45)}
+.m-card.c-gold .m-unit{color:rgba(255,255,255,0.35)}
+
+/* ─── Info strip ─── */
+.info-strip{
+  background:var(--card);
+  border-radius:var(--r-lg);
+  border:1.5px solid var(--paper2);
+  padding:18px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-bottom:12px;
+  animation:fadeUp 0.4s 0.1s ease both;
+}
+
+.info-item .il{
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--ink3);
+  margin-bottom:3px;
+}
+
+.info-item .iv{
+  font-size:13px;
+  font-weight:600;
+  color:var(--ink);
+  line-height:1.4;
+}
+
+/* ─── Sticky CTA ─── */
+.sticky-cta{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+  background:rgba(244,241,235,0.92);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border-top:1px solid var(--paper3);
+  max-width:520px;
+  margin:0 auto;
+  left:50%;
+  transform:translateX(-50%);
+  width:100%;
+  z-index:100;
+}
+
+.btn{
+  width:100%;
+  background:var(--ink);
+  color:#fff;
+  border:none;
+  border-radius:var(--r);
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:16px;
+  font-weight:700;
+  padding:17px;
+  cursor:pointer;
+  transition:background 0.18s,transform 0.1s;
+  letter-spacing:0.01em;
+}
+
+.btn:active{transform:scale(0.98)}
+.btn:disabled{background:var(--paper3);color:var(--ink3);cursor:not-allowed}
+.btn.loading{background:var(--ink2)}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-tag">
+    <div class="dot"></div>
+    Live · NSE &amp; BSE
+  </div>
+  <h1>Liquidity<br>Dashboard</h1>
+  <div class="header-meta">Last updated: <strong id="lastUpdated">—</strong></div>
+</div>
+
+<!-- Body -->
+<div class="body">
+
+  <!-- Security -->
+  <div class="sec-label">Security Name</div>
+  <div class="select-wrap">
+    <select id="secSelect">
+      <option value="">Select a security…</option>
+    </select>
+  </div>
+
+  <!-- Exchange -->
+  <div class="sec-label">Exchange</div>
+  <div class="pills" id="exchPills">
+    <div class="pill active-exch" data-exch="COMBINED">Combined</div>
+    <div class="pill" data-exch="NSE">NSE</div>
+    <div class="pill" data-exch="BSE">BSE</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Period -->
+  <div class="sec-label">Duration</div>
+  <div class="pills" id="periodPills">
+    <div class="pill" data-period="1M">1 Month</div>
+    <div class="pill" data-period="3M">3 Months</div>
+    <div class="pill active-period" data-period="6M">6 Months</div>
+    <div class="pill" data-period="1Y">1 Year</div>
+    <div class="pill" data-period="2Y">2 Years</div>
+    <div class="pill" data-period="ALL">All Time</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Error -->
+  <div class="error-box" id="errorBox"></div>
+
+  <!-- Results -->
+  <div id="results">
+    <div class="state-card">
+      <span class="state-emoji">📈</span>
+      <div class="state-title">Ready to analyse</div>
+      <div class="state-sub">Pick a security and duration above, then tap <strong>Calculate</strong> below.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Sticky CTA -->
+<div class="sticky-cta">
+  <button class="btn" id="fetchBtn" onclick="runFetch()">Calculate</button>
+</div>
+
+<script>
+const SHEET_ID='1ycxSxiOnLLz-_CaoDV2B9mvoeqmavvXfep0oKJ1W9T8';
+const REF='IRBINVIT_NSE';
+
+const SECS=['ALTIUS','ANANTAM','ANZEN','BIRET','CAPINVIT','CITIUSINVT','CUBEINVIT',
+  'DIGIFIBRE','EMBASSY','ENERGY','INDIGRID','INDUSINVIT','INTERISE','IRBINVIT',
+  'KRT','MIT','MINDSPACE','NDRINVIT','NEXUSSELECT','NHIT','NXT-INFRA',
+  'OSEINTRUST','PGINVIT','PSCELESTIA','PSPLATINA','PSTITANIA','RIIT',
+  'ROADSTAR','SEITINVIT','SHREMINVIT','TVSINVIT','VERTIS'];
+
+let period='6M', exch='COMBINED';
+
+const sel=document.getElementById('secSelect');
+SECS.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
+
+document.querySelectorAll('#exchPills .pill').forEach(p=>{
+  p.addEventListener('click',()=>{
+    document.querySelectorAll('#exchPills .pill').forEach(x=>x.classList.remove('active-exch'));
+    p.classList.add('active-exch');
+    exch=p.dataset.exch;
+  });
+});
+
+document.querySelectorAll('#periodPills .pill').forEach(p=>{
+  p.addEventListener('click',()=>{
+    document.querySelectorAll('#periodPills .pill').forEach(x=>x.classList.remove('active-period'));
+    p.classList.add('active-period');
+    period=p.dataset.period;
+  });
+});
+
+async function fetchSheet(name){
+  const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(name)}`;
+  const res=await fetch(url);
+  if(!res.ok) throw new Error(`HTTP ${res.status} for "${name}"`);
+  const txt=await res.text();
+  const m=txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+  if(!m) throw new Error(`Bad response for "${name}"`);
+  const d=JSON.parse(m[1]);
+  if(d.status==='error') throw new Error(`Sheet "${name}" not found. Check it exists and the sheet is publicly shared.`);
+  return d.table;
+}
+
+function parseDate(v){
+  if(!v) return null;
+  const s=String(v);
+  const m=s.match(/Date\((\d+),(\d+),(\d+)\)/);
+  if(m) return new Date(+m[1],+m[2],+m[3]);
+  const d=new Date(s);
+  return isNaN(d)?null:d;
+}
+
+function startDate(){
+  const n=new Date();
+  switch(period){
+    case '1M': return new Date(n.getFullYear(),n.getMonth()-1,n.getDate());
+    case '3M': return new Date(n.getFullYear(),n.getMonth()-3,n.getDate());
+    case '6M': return new Date(n.getFullYear(),n.getMonth()-6,n.getDate());
+    case '1Y': return new Date(n.getFullYear()-1,n.getMonth(),n.getDate());
+    case '2Y': return new Date(n.getFullYear()-2,n.getMonth(),n.getDate());
+    default:   return new Date(2000,0,1);
+  }
+}
+
+function detectCols(table){
+  let dc=-1,qc=-1,vc=-1;
+  (table.cols||[]).forEach((c,i)=>{
+    const l=(c.label||'').toLowerCase(),t=(c.type||'').toLowerCase();
+    if(dc<0&&(t==='date'||t==='datetime'||l.includes('date'))) dc=i;
+    else if(qc<0&&(l.includes('qty')||l.includes('quantity')||l.includes('volume'))) qc=i;
+    else if(vc<0&&(l.includes('val')||l.includes('amount')||l.includes('cr')||l.includes('turnover'))) vc=i;
+  });
+  return{dc:dc<0?0:dc, qc:qc<0?1:qc, vc:vc<0?2:vc};
+}
+
+function filterRows(table,sd,ed,cols){
+  return(table.rows||[]).filter(r=>{
+    const d=parseDate(r.c?.[cols.dc]?.v);
+    return d&&d>=sd&&d<=ed;
+  });
+}
+
+function fmt(n,dec=0){
+  if(isNaN(n)||n===null) return '—';
+  return n.toLocaleString('en-IN',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+}
+
+function periodLabel(){
+  return{'1M':'1 Month','3M':'3 Months','6M':'6 Months','1Y':'1 Year','2Y':'2 Years','ALL':'All Time'}[period]||period;
+}
+
+function fmtDate(d){
+  return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+}
+
+async function runFetch(){
+  const sec=sel.value;
+  if(!sec){showError('Please select a security first.');return;}
+  hideError();
+
+  const btn=document.getElementById('fetchBtn');
+  btn.disabled=true;btn.classList.add('loading');btn.textContent='Fetching…';
+
+  document.getElementById('results').innerHTML=`
+    <div class="state-card">
+      <div class="spinner"></div>
+      <div class="state-title">Loading…</div>
+      <div class="state-sub">Reading <strong>${sec}_${exch}</strong> from Google Sheets</div>
+    </div>`;
+
+  const sd=startDate(), ed=new Date();
+  const sheet=`${sec}_${exch}`;
+
+  try{
+    const [sT,rT]=await Promise.all([fetchSheet(sheet),fetchSheet(REF)]);
+    const sC=detectCols(sT), rC=detectCols(rT);
+    const sRows=filterRows(sT,sd,ed,sC);
+    const rRows=filterRows(rT,sd,ed,rC);
+    const refDays=rRows.length;
+
+    let totalQ=0,totalV=0,traded=0;
+    sRows.forEach(r=>{
+      const q=parseFloat(r.c?.[sC.qc]?.v)||0;
+      const v=parseFloat(r.c?.[sC.vc]?.v)||0;
+      totalQ+=q;totalV+=v;
+      if(q>0) traded++;
+    });
+
+    const denom=refDays||sRows.length||1;
+    const avgQ=totalQ/denom;
+    const avgV=totalV/denom;
+    const valCr=avgV>100?avgV/1e7:avgV;
+
+    /* Update last updated from ref sheet */
+    if(rRows.length){
+      const last=rRows[rRows.length-1];
+      const lf=last?.c?.[rC.dc]?.f||'';
+      if(lf) document.getElementById('lastUpdated').textContent=lf;
+    }
+
+    document.getElementById('results').innerHTML=`
+      <div class="metrics-grid">
+        <div class="m-card c-teal">
+          <div class="m-label">Avg Daily Traded Qty</div>
+          <div class="m-value">${fmt(Math.round(avgQ))}</div>
+          <div class="m-unit">units / day</div>
+        </div>
+        <div class="m-card c-gold">
+          <div class="m-label">Avg Daily Traded Value</div>
+          <div class="m-value">${fmt(valCr,2)}</div>
+          <div class="m-unit">INR Crore / day</div>
+        </div>
+      </div>
+      <div class="info-strip">
+        <div class="info-item">
+          <div class="il">Security</div>
+          <div class="iv">${sec} · ${exch}</div>
+        </div>
+        <div class="info-item">
+          <div class="il">Period</div>
+          <div class="iv">${periodLabel()}</div>
+        </div>
+        <div class="info-item">
+          <div class="il">From</div>
+          <div class="iv">${fmtDate(sd)}</div>
+        </div>
+        <div class="info-item">
+          <div class="il">To</div>
+          <div class="iv">${fmtDate(ed)}</div>
+        </div>
+        <div class="info-item">
+          <div class="il">Ref. Days</div>
+          <div class="iv">${refDays} trading days</div>
+        </div>
+        <div class="info-item">
+          <div class="il">Traded Days</div>
+          <div class="iv">${traded} days</div>
+        </div>
+      </div>`;
+  }catch(e){
+    showError(e.message);
+    document.getElementById('results').innerHTML=`
+      <div class="state-card">
+        <span class="state-emoji">⚠️</span>
+        <div class="state-title">Could not load data</div>
+        <div class="state-sub">See the error above for details.</div>
+      </div>`;
+  }finally{
+    btn.disabled=false;btn.classList.remove('loading');btn.textContent='Calculate';
+  }
+}
+
+function showError(msg){
+  const e=document.getElementById('errorBox');
+  e.textContent='⚠ '+msg;e.style.display='block';
+}
+function hideError(){document.getElementById('errorBox').style.display='none';}
+</script>
+</body>
+</html>
