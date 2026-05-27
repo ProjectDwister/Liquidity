@@ -122,7 +122,6 @@ body{
   transition:all .18s;user-select:none;-webkit-user-select:none;
 }
 .pill:active{transform:scale(0.95)}
-.pill.active-exch{background:var(--ink);border-color:var(--ink);color:#fff}
 .pill.active-period{background:var(--gold-lt);border-color:var(--gold);color:var(--gold)}
 
 /* ── Divider ── */
@@ -260,15 +259,6 @@ body{
     </select>
   </div>
 
-  <div class="sec-label">Exchange</div>
-  <div class="pills" id="exchPills">
-    <div class="pill active-exch" data-exch="COMBINED">Combined</div>
-    <div class="pill" data-exch="NSE">NSE</div>
-    <div class="pill" data-exch="BSE">BSE</div>
-  </div>
-
-  <div class="divider"></div>
-
   <div class="sec-label">Duration</div>
   <div class="pills" id="periodPills">
     <div class="pill" data-period="1 Week">1 Week</div>
@@ -302,7 +292,7 @@ body{
 //  PASTE YOUR APPS SCRIPT WEB APP URL HERE
 //  (Leave empty to see the setup notice above)
 // ─────────────────────────────────────────────
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx4mXqLDgmvcrJ7WxRvUl-Xbww6sB51Hys3udCxCvQynBsww87eQSdrYXdL1w970W4m/exec';
+const APPS_SCRIPT_URL = '';
 
 const SECS = [
   'ALTIUS','ANANTAM','ANZEN','BIRET','CAPINVIT','CITIUSINVT','CUBEINVIT',
@@ -313,9 +303,8 @@ const SECS = [
 ];
 
 let period = '3 Months';
-let exch   = 'COMBINED';
 
-// Populate security dropdown
+
 const sel = document.getElementById('secSelect');
 SECS.forEach(s => {
   const o = document.createElement('option');
@@ -325,15 +314,6 @@ SECS.forEach(s => {
 
 // Hide setup notice once URL is set
 if (APPS_SCRIPT_URL) document.getElementById('setupNotice').style.display = 'none';
-
-// Exchange pills
-document.querySelectorAll('#exchPills .pill').forEach(p => {
-  p.addEventListener('click', () => {
-    document.querySelectorAll('#exchPills .pill').forEach(x => x.classList.remove('active-exch'));
-    p.classList.add('active-exch');
-    exch = p.dataset.exch;
-  });
-});
 
 // Period pills
 document.querySelectorAll('#periodPills .pill').forEach(p => {
@@ -372,9 +352,7 @@ async function runFetch() {
     </div>`;
 
   try {
-    // The security name sent to the sheet combines base name + exchange
-    // e.g. "CUBEINVIT" for COMBINED, or "CUBEINVIT_NSE" for NSE
-    const securityName = exch === 'COMBINED' ? sec : `${sec}_${exch}`;
+    const securityName = sec;
 
     const url = `${APPS_SCRIPT_URL}?security=${encodeURIComponent(securityName)}&duration=${encodeURIComponent(period)}`;
     const res = await fetch(url);
